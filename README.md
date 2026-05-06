@@ -38,6 +38,50 @@ curl -s http://127.0.0.1:8080/v1/models | jq      # OpenAI-compatible model list
 
 The web UI is also available at `http://127.0.0.1:8080`.
 
+## Using it from opencode
+
+`llama-server` exposes an OpenAI-compatible API at `/v1`, so any client that
+speaks OpenAI works. Example `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "provider": {
+    "llama-local": {
+      "name": "llama.cpp (Local)",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://127.0.0.1:8080/v1"
+      },
+      "models": {
+        "qwen3-coder-30b": {
+          "name": "Qwen3 Coder 30B (local)",
+          "tool_call": true
+        },
+        "gemma-26b": {
+          "name": "Gemma 4 26B (local)",
+          "tool_call": true
+        }
+      }
+    }
+  }
+}
+```
+
+Notes:
+
+- `baseURL` must match `HOST:PORT` in `run-llama.sh` (defaults to
+  `127.0.0.1:8080`). If you change either, update both.
+- The model **key** under `models` (e.g. `qwen3-coder-30b`) is the ID opencode
+  sends in API requests. The server only knows the one model it was launched
+  with — check the actual ID it advertises with
+  `curl -s http://127.0.0.1:8080/v1/models | jq`. If the IDs don't match,
+  llama-server typically ignores the request's model field and serves whatever
+  is loaded, but it's cleaner to match.
+- This script runs one model per server instance. To switch models in
+  opencode, stop the server (Ctrl+C) and start it with a different nickname.
+- `tool_call: true` only works for models that actually support tool calling
+  (the Qwen3-Coder family does; check the model card for others).
+
 ## Available models
 
 | Nickname          | HF repo                                          | Notes                          |
